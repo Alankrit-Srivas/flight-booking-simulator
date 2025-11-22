@@ -10,3 +10,5 @@ CREATE TABLE flights (
     seats_available INT
 );
 
+-- SELECT * FROM flights
+

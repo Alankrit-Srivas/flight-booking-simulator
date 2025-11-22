@@ -29,7 +29,7 @@ A detailed report including:
 ## 3. Meeting Notes / Lecture Summary
 Notes extracted from the Infosys training sessions.
 
-(You can add them anytime)
+(will add them later)
 
 ---
 
