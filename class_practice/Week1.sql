@@ -1,3 +1,5 @@
+-- Active: 1763825441119@@127.0.0.1@3306@mysql
+
 -- week 1 practice work
 CREATE TABLE airports (
     id INT AUTO_INCREMENT PRIMARY KEY,
