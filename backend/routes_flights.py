@@ -80,4 +80,5 @@ def update_flight(flight_id: int, flight: dict, conn = Depends(get_connection)):
 
     except Error as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 
