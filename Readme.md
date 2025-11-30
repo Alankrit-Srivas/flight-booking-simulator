@@ -215,3 +215,7 @@ http://127.0.0.1:8000/docs
 A S 
 Flight Booking Simulator – Backend  
 Springboard Software Engineering Bootcamp
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
