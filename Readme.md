@@ -212,6 +212,6 @@ http://127.0.0.1:8000/docs
 ---
 
 ## 👨‍💻 Author
-Alankrit Srivastava 
+A S 
 Flight Booking Simulator – Backend  
 Springboard Software Engineering Bootcamp
