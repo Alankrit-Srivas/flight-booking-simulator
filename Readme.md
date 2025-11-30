@@ -30,7 +30,7 @@ Foreign key relations
 Timestamp fields
 
 ✅ APIs Implemented
-#
+
 Endpoint	            Method	     Description
 /flights	            GET	         Retrieve all flights
 /flights	            POST	         Create a new flight
@@ -40,7 +40,7 @@ Endpoint	            Method	     Description
 
 ❤️ Health Check
 Method	Endpoint	Description
-#
+
 GET	      /	      API health check + DB connection test
 
 📂 Project Structure
@@ -54,9 +54,11 @@ flight-booking-simulator/
 │   ├── routes_bookings.py
 │
 ├── Docs/
-│   ├── database_schema.sql      ← Your DB schema (important for assignment)
-│   ├── seed_data.sql            ← (You will add this)
+│   ├── database_schema.sql
+│   ├── seed_data.sql
 │
 ├── .gitignore
+├── LICENSE
 ├── README.md
-├── LICENSE                      ← MIT License added
+└──
+
