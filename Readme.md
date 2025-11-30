@@ -44,6 +44,7 @@ Method	Endpoint	Description
 GET	      /	      API health check + DB connection test
 
 📂 Project Structure
+```text
 
 flight-booking-simulator/
 │
@@ -60,5 +61,4 @@ flight-booking-simulator/
 ├── .gitignore
 ├── LICENSE
 ├── README.md
-└──
-
+└── .env   (not committed)
