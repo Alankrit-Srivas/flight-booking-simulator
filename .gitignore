@@ -1,27 +1,64 @@
-# Environment variables (IMPORTANT)
-.env
-
-# Python cache
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# VS Code settings
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
-
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
 # Logs
 *.log
+logs/
 
-# Virtual environment
-venv/
-env/
-.env
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
 
-
-# FastAPI/UVicorn generated files
-*.db
-
-# OS files
+# OS
 Thumbs.db
 .DS_Store
+
+# Project specific
+*.sql.backup
+temp/
+tmp/

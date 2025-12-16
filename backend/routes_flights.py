@@ -1,367 +1,269 @@
-from fastapi import APIRouter, Depends, HTTPException
-from backend.database import get_connection
-from pydantic import BaseModel
-from typing import Optional, List, Dict
-from datetime import datetime
-import random
+from fastapi import APIRouter, HTTPException, Query
+from typing import Optional
+from datetime import date, datetime
+from database import get_db_connection
+from pydantic import BaseModel, Field
+import mysql.connector
 
-router = APIRouter()
+router = APIRouter(prefix="/flights", tags=["Flights"])
 
-
-# ---------- Pydantic models ----------
-
+# Pydantic Models
 class FlightCreate(BaseModel):
-    flight_number: str
-    origin: str
-    destination: str
+    flight_number: str = Field(..., min_length=4, max_length=10)
+    airline: str = Field(..., min_length=2, max_length=50)
+    origin: str = Field(..., min_length=3, max_length=3)
+    destination: str = Field(..., min_length=3, max_length=3)
     departure_time: datetime
     arrival_time: datetime
-    price: float              # base fare
-    total_seats: int = 100    # capacity
-    available_seats: int = 100
-    demand_level: int = 50    # 0–100
-
+    base_price: float = Field(..., gt=0)
+    total_seats: int = Field(..., gt=0)
+    available_seats: int = Field(..., ge=0)
 
 class FlightUpdate(BaseModel):
-    flight_number: Optional[str] = None
-    origin: Optional[str] = None
-    destination: Optional[str] = None
+    airline: Optional[str] = None
     departure_time: Optional[datetime] = None
     arrival_time: Optional[datetime] = None
-    price: Optional[float] = None
-    total_seats: Optional[int] = None
+    base_price: Optional[float] = None
     available_seats: Optional[int] = None
-    demand_level: Optional[int] = None
 
-
-# ---------- Dynamic pricing helper ----------
-
-def calculate_dynamic_price(flight: Dict) -> float:
-    """
-    Compute dynamic price based on:
-    - base price (flight['price'])
-    - remaining seat percentage
-    - time until departure
-    - demand_level
-    """
-    base_price = float(flight["price"])
-
-    total_seats = flight.get("total_seats") or 100
-    available_seats = flight.get("available_seats") or total_seats
-
-    remaining_ratio = available_seats / total_seats if total_seats > 0 else 1.0
-    remaining_percent = remaining_ratio * 100
-
-    # Seat factor: fewer seats -> higher price
-    if remaining_percent <= 20:
-        seat_factor = 1.5
-    elif remaining_percent <= 50:
-        seat_factor = 1.2
-    else:
-        seat_factor = 1.0
-
-    # Time factor: closer to departure -> higher price
-    now = datetime.now()
-    departure_time = flight["departure_time"]
-    if isinstance(departure_time, str):
-        departure_time = datetime.fromisoformat(departure_time)
-
-    delta_days = max((departure_time - now).total_seconds() / 86400, 0)
-
-    if delta_days <= 1:
-        time_factor = 1.5
-    elif delta_days <= 7:
-        time_factor = 1.2
-    else:
-        time_factor = 1.0
-
-    # Demand factor: based on demand_level (0–100)
-    demand_level = flight.get("demand_level", 50)
-    # Map 0–100 -> 0.8–1.2 range roughly
-    demand_factor = 0.8 + (demand_level / 100) * 0.4
-
-    dynamic_price = base_price * seat_factor * time_factor * demand_factor
-
-    return round(dynamic_price, 2)
-
-
-def attach_dynamic_price(rows: List[Dict]) -> List[Dict]:
-    """
-    For each DB row, add dynamic_price and factors for debugging.
-    """
-    now = datetime.now()
-    for f in rows:
-        total_seats = f.get("total_seats") or 100
-        available_seats = f.get("available_seats") or total_seats
-        remaining_ratio = available_seats / total_seats if total_seats > 0 else 1.0
-        remaining_percent = remaining_ratio * 100
-
-        departure_time = f["departure_time"]
-        if isinstance(departure_time, str):
-            departure_time = datetime.fromisoformat(departure_time)
-        delta_days = max((departure_time - now).total_seconds() / 86400, 0)
-
-        demand_level = f.get("demand_level", 50)
-
-        # same factors as calculate_dynamic_price
-        if remaining_percent <= 20:
-            seat_factor = 1.5
-        elif remaining_percent <= 50:
-            seat_factor = 1.2
-        else:
-            seat_factor = 1.0
-
-        if delta_days <= 1:
-            time_factor = 1.5
-        elif delta_days <= 7:
-            time_factor = 1.2
-        else:
-            time_factor = 1.0
-
-        demand_factor = 0.8 + (demand_level / 100) * 0.4
-
-        f["dynamic_price"] = round(float(f["price"]) * seat_factor * time_factor * demand_factor, 2)
-        f["remaining_seat_percent"] = round(remaining_percent, 1)
-        f["days_until_departure"] = round(delta_days, 1)
-        f["demand_level"] = demand_level
-
-    return rows
-
-
-# ---------- Basic endpoints ----------
-
-@router.get("/flights")
-def get_all_flights(conn=Depends(get_connection)):
-    """
-    Get all flights with dynamic pricing info.
-    """
+# GET all flights with filtering and sorting
+@router.get("/")
+def get_flights(
+    origin: Optional[str] = Query(None, min_length=3, max_length=3),
+    destination: Optional[str] = Query(None, min_length=3, max_length=3),
+    departure_date: Optional[date] = None,
+    sort_by: Optional[str] = Query("price", pattern="^(price|duration|departure)$"),
+    order: Optional[str] = Query("asc", pattern="^(asc|desc)$")
+):
+    """Search flights with filters"""
     try:
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            """
-            SELECT
-                id,
-                flight_number,
-                origin,
-                destination,
-                departure_time,
-                arrival_time,
-                price,
-                total_seats,
-                available_seats,
-                demand_level,
-                TIMESTAMPDIFF(MINUTE, departure_time, arrival_time) AS duration
+        
+        query = """
+            SELECT 
+                id, flight_number, airline, origin, destination,
+                departure_time, arrival_time, base_price, current_price,
+                total_seats, available_seats, created_at,
+                TIMESTAMPDIFF(MINUTE, departure_time, arrival_time) as duration_minutes
             FROM flights
-            """
-        )
-        rows = cursor.fetchall()
-        rows = attach_dynamic_price(rows)
-        return {"results": rows}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/flights")
-def create_flight(flight: FlightCreate, conn=Depends(get_connection)):
-    """
-    Create a new flight (with base price, seats, and demand level).
-    """
-    try:
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO flights
-                (flight_number, origin, destination, departure_time, arrival_time,
-                 price, total_seats, available_seats, demand_level)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        data = (
-            flight.flight_number,
-            flight.origin,
-            flight.destination,
-            flight.departure_time,
-            flight.arrival_time,
-            flight.price,
-            flight.total_seats,
-            flight.available_seats,
-            flight.demand_level,
-        )
-        cursor.execute(query, data)
-        conn.commit()
-
-        return {
-            "message": "Flight created successfully",
-            "flight_id": cursor.lastrowid,
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.put("/flights/{flight_id}")
-def update_flight(
-    flight_id: int,
-    flight: FlightUpdate,
-    conn=Depends(get_connection),
-):
-    """
-    Update an existing flight (partial update).
-    """
-    try:
-        cursor = conn.cursor(dictionary=True)
-
-        fields = []
-        params = []
-
-        if flight.flight_number is not None:
-            fields.append("flight_number = %s")
-            params.append(flight.flight_number)
-        if flight.origin is not None:
-            fields.append("origin = %s")
-            params.append(flight.origin)
-        if flight.destination is not None:
-            fields.append("destination = %s")
-            params.append(flight.destination)
-        if flight.departure_time is not None:
-            fields.append("departure_time = %s")
-            params.append(flight.departure_time)
-        if flight.arrival_time is not None:
-            fields.append("arrival_time = %s")
-            params.append(flight.arrival_time)
-        if flight.price is not None:
-            fields.append("price = %s")
-            params.append(flight.price)
-        if flight.total_seats is not None:
-            fields.append("total_seats = %s")
-            params.append(flight.total_seats)
-        if flight.available_seats is not None:
-            fields.append("available_seats = %s")
-            params.append(flight.available_seats)
-        if flight.demand_level is not None:
-            fields.append("demand_level = %s")
-            params.append(flight.demand_level)
-
-        if not fields:
-            raise HTTPException(status_code=400, detail="No fields provided to update")
-
-        query = f"UPDATE flights SET {', '.join(fields)} WHERE id = %s"
-        params.append(flight_id)
-
-        cursor.execute(query, tuple(params))
-        conn.commit()
-
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Flight not found")
-
-        return {"message": "Flight updated successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ---------- Search with dynamic pricing ----------
-
-@router.get("/flights/search")
-def search_flights(
-    origin: Optional[str] = None,
-    destination: Optional[str] = None,
-    date: Optional[str] = None,   # YYYY-MM-DD
-    sort: Optional[str] = "price", # price or duration or dynamic_price
-    conn=Depends(get_connection),
-):
-    """
-    Search flights by origin, destination, date and sort by price/duration/dynamic price.
-    """
-    try:
-        cursor = conn.cursor(dictionary=True)
-
-        query = """
-        SELECT
-            id,
-            flight_number,
-            origin,
-            destination,
-            departure_time,
-            arrival_time,
-            price,
-            total_seats,
-            available_seats,
-            demand_level,
-            TIMESTAMPDIFF(MINUTE, departure_time, arrival_time) AS duration
-        FROM flights
-        WHERE 1 = 1
+            WHERE 1=1
         """
         params = []
-
+        
         if origin:
-            query += " AND origin = %s"
+            query += " AND UPPER(origin) = UPPER(%s)"
             params.append(origin)
-
+        
         if destination:
-            query += " AND destination = %s"
+            query += " AND UPPER(destination) = UPPER(%s)"
             params.append(destination)
-
-        if date:
+        
+        if departure_date:
             query += " AND DATE(departure_time) = %s"
-            params.append(date)
-
-        # initial DB-level sort (on static fields)
-        if sort == "price":
-            query += " ORDER BY price ASC"
-        elif sort == "duration":
-            query += " ORDER BY duration ASC"
-        else:
-            query += " ORDER BY price ASC"
-
-        cursor.execute(query, tuple(params))
-        rows = cursor.fetchall()
-        rows = attach_dynamic_price(rows)
-
-        # sort in Python if required by dynamic_price
-        if sort == "dynamic_price":
-            rows.sort(key=lambda f: f["dynamic_price"])
-
-        return {
-            "filters_used": {
-                "origin": origin,
-                "destination": destination,
-                "date": date,
-                "sort": sort,
-            },
-            "results": rows,
+            params.append(departure_date)
+        
+        sort_column_map = {
+            "price": "current_price",
+            "duration": "duration_minutes",
+            "departure": "departure_time"
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        sort_column = sort_column_map.get(sort_by, "current_price")
+        query += f" ORDER BY {sort_column} {order.upper()}"
+        
+        cursor.execute(query, params)
+        flights = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "count": len(flights),
+            "flights": flights
+        }
+    
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
 
-
-# ---------- Simulated airline sync (M1 feature, still useful) ----------
-
-@router.post("/flights/sync-airlines")
-def sync_airline_data(conn=Depends(get_connection)):
-    """
-    Simulates external airline API by randomly updating base prices.
-    """
+# GET specific flight by ID
+@router.get("/{flight_id}")
+def get_flight_by_id(flight_id: int):
+    """Get detailed information about a specific flight"""
     try:
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT id, price FROM flights ORDER BY RAND() LIMIT 1")
-        row = cursor.fetchone()
-
-        if not row:
-            raise HTTPException(status_code=404, detail="No flights to update")
-
-        flight_id, old_price = row
-        new_price = float(old_price) + random.randint(-200, 500)
-        if new_price < 500:
-            new_price = 500
-
-        cursor.execute("UPDATE flights SET price=%s WHERE id=%s", (new_price, flight_id))
-        conn.commit()
-
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        query = """
+            SELECT 
+                id, flight_number, airline, origin, destination,
+                departure_time, arrival_time, base_price, current_price,
+                total_seats, available_seats, created_at,
+                TIMESTAMPDIFF(MINUTE, departure_time, arrival_time) as duration_minutes
+            FROM flights
+            WHERE id = %s
+        """
+        
+        cursor.execute(query, (flight_id,))
+        flight = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if not flight:
+            raise HTTPException(status_code=404, detail="Flight not found")
+        
         return {
-            "message": "Airline data sync completed",
-            "updated_flight_id": flight_id,
-            "old_price": float(old_price),
-            "new_base_price": new_price,
+            "success": True,
+            "flight": flight
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+
+# POST - Create new flight
+@router.post("/", status_code=201)
+def create_flight(flight: FlightCreate):
+    """Create a new flight"""
+    try:
+        if flight.departure_time >= flight.arrival_time:
+            raise HTTPException(
+                status_code=400, 
+                detail="Departure time must be before arrival time"
+            )
+        
+        if flight.available_seats > flight.total_seats:
+            raise HTTPException(
+                status_code=400,
+                detail="Available seats cannot exceed total seats"
+            )
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        query = """
+            INSERT INTO flights 
+            (flight_number, airline, origin, destination, departure_time, 
+             arrival_time, base_price, current_price, total_seats, available_seats)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        
+        values = (
+            flight.flight_number, flight.airline, flight.origin.upper(),
+            flight.destination.upper(), flight.departure_time, flight.arrival_time,
+            flight.base_price, flight.base_price,
+            flight.total_seats, flight.available_seats
+        )
+        
+        cursor.execute(query, values)
+        conn.commit()
+        
+        flight_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Flight created successfully",
+            "flight_id": flight_id
+        }
+    
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+
+# PUT - Update flight
+@router.put("/{flight_id}")
+def update_flight(flight_id: int, flight_update: FlightUpdate):
+    """Update flight details"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        update_fields = []
+        values = []
+        
+        if flight_update.airline:
+            update_fields.append("airline = %s")
+            values.append(flight_update.airline)
+        
+        if flight_update.departure_time:
+            update_fields.append("departure_time = %s")
+            values.append(flight_update.departure_time)
+        
+        if flight_update.arrival_time:
+            update_fields.append("arrival_time = %s")
+            values.append(flight_update.arrival_time)
+        
+        if flight_update.base_price:
+            update_fields.append("base_price = %s")
+            values.append(flight_update.base_price)
+        
+        if flight_update.available_seats is not None:
+            update_fields.append("available_seats = %s")
+            values.append(flight_update.available_seats)
+        
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        values.append(flight_id)
+        query = f"UPDATE flights SET {', '.join(update_fields)} WHERE id = %s"
+        
+        cursor.execute(query, values)
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            raise HTTPException(status_code=404, detail="Flight not found")
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Flight updated successfully"
+        }
+    
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
+
+# DELETE - Delete flight
+@router.delete("/{flight_id}")
+def delete_flight(flight_id: int):
+    """Delete a flight"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT COUNT(*) as count FROM bookings WHERE flight_id = %s",
+            (flight_id,)
+        )
+        result = cursor.fetchone()
+        
+        if result[0] > 0:
+            cursor.close()
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete flight with existing bookings"
+            )
+        
+        cursor.execute("DELETE FROM flights WHERE id = %s", (flight_id,))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            raise HTTPException(status_code=404, detail="Flight not found")
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Flight deleted successfully"
+        }
+    
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Database error: {err}")
