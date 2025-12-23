@@ -10,10 +10,12 @@ import uvicorn
 
 from routes_flights import router as flights_router
 from routes_bookings import router as bookings_router
+from routes_auth import router as auth_router
 from pricing_engine import PricingEngine
 from database import get_db_connection
 import mysql.connector
 
+# Initialize FastAPI app
 app = FastAPI(
     title="Flight Booking Simulator API",
     description="Backend API for Flight Booking with Dynamic Pricing",
@@ -21,6 +23,14 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc"
 )
+
+# CORS Configuration - MUST BE BEFORE ROUTES
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+]
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +42,7 @@ app.add_middleware(
 
 app.include_router(flights_router, prefix="/api")
 app.include_router(bookings_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 
 @app.get("/")
 async def root():

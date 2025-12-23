@@ -1,9 +1,10 @@
-# ✈️ Flight Booking Simulator with Dynamic Pricing
+# ✈️ Flight Booking Simulator with Dynamic Pricing & Authentication
 
-A complete backend system for flight booking that mimics real-world airline reservation systems with intelligent dynamic pricing, seat management, and concurrent booking transactions.
+A complete full-stack web application for flight booking that mimics real-world airline reservation systems with **dynamic pricing engine**, **user authentication**, **advanced search features**, and **concurrent booking management**.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-green.svg)
+![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -11,62 +12,38 @@ A complete backend system for flight booking that mimics real-world airline rese
 
 ## 📌 Project Overview
 
-This project implements a **Flight Booking Simulator** with advanced features including:
+This project implements a **comprehensive Flight Booking System** with enterprise-grade features:
 
-- 🔍 **Flight Search** with filtering and sorting
-- 💰 **Dynamic Pricing Engine** based on demand, time, and seat availability
-- 🎫 **Booking System** with PNR generation and seat assignment
-- 🔒 **Concurrency Control** using database locking
-- 📊 **Real-time Analytics** and reporting
-- 🚀 **RESTful API** with automatic documentation
+- 🔐 **User Authentication** - Secure signup/login with JWT tokens
+- 🔍 **Smart Search** - Autocomplete suggestions and advanced filters
+- 💰 **Dynamic Pricing** - Real-time price adjustment based on demand
+- 🎫 **Booking Management** - Multi-step booking with PNR generation
+- ⚡ **One-way/Round-trip** - Flexible trip type selection
+- 🏢 **Airline Filtering** - Filter by specific airlines
+- 📊 **Quick Filters** - Cheapest, Fastest, Non-stop options
+- 🔒 **Concurrency Control** - Thread-safe seat reservations
+- 🎨 **Modern UI** - Professional teal-themed interface
 
-Built as part of the **Infosys Internship Training Program** (Milestones 1-3 Complete).
-
----
-
-## 🚀 Features
-
-### ✅ Completed Features
-
-#### **Flight Management**
-- Create, read, update, and delete flights
-- Search flights by origin, destination, and date
-- Sort by price, duration, or departure time
-- Real-time seat availability tracking
-
-#### **Dynamic Pricing Engine**
-- **Multi-factor pricing algorithm:**
-  - 40% weight: Seat availability (fewer seats = higher price)
-  - 35% weight: Time to departure (closer = higher price)
-  - 25% weight: Demand level simulation
-- Price multiplier range: 0.8x to 3.0x of base price
-- Automatic price updates after each booking
-
-#### **Booking System**
-- Multi-step booking workflow
-- Automatic PNR (Passenger Name Record) generation
-- Intelligent seat assignment (row + letter format)
-- Payment simulation with 95% success rate
-- Concurrency-safe transactions using row locking
-- Booking cancellation with seat release
-
-#### **API & Documentation**
-- Interactive Swagger UI documentation
-- RESTful endpoints with proper HTTP methods
-- Input validation using Pydantic
-- Comprehensive error handling
+Built as part of the **Infosys Internship Training Program** (All 3 Backend Milestones + Authentication Complete).
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Tech Stack
 
-| Technology | Purpose |
-|------------|---------|
-| **FastAPI** | High-performance web framework |
-| **MySQL** | Relational database |
-| **Pydantic** | Data validation |
-| **Uvicorn** | ASGI server |
-| **Python 3.8+** | Backend language |
+### **Backend**
+- **FastAPI** - High-performance Python web framework
+- **MySQL** - Relational database
+- **Pydantic** - Data validation
+- **Passlib & Bcrypt** - Password hashing
+- **Python-JOSE** - JWT token generation
+- **Uvicorn** - ASGI server
+
+### **Frontend**
+- **React 18** - UI library
+- **React Router** - Navigation
+- **Axios** - HTTP client
+- **Context API** - State management
+- **CSS3** - Custom styling
 
 ---
 
@@ -75,15 +52,39 @@ Built as part of the **Infosys Internship Training Program** (Milestones 1-3 Com
 flight-booking-simulator/
 │
 ├── backend/
-│   ├── main.py                 # FastAPI application entry point
-│   ├── database.py             # Database connection configuration
-│   ├── routes_flights.py       # Flight endpoints
-│   ├── routes_bookings.py      # Booking endpoints
-│   ├── pricing_engine.py       # Dynamic pricing algorithm
-│   ├── requirements.txt        # Python dependencies
-│   └── .env                    # Environment variables (not in repo)
+│   ├── main.py                     # FastAPI application entry
+│   ├── database.py                 # Database connection
+│   ├── routes_flights.py           # Flight endpoints
+│   ├── routes_bookings.py          # Booking endpoints
+│   ├── routes_auth.py              # Authentication endpoints (NEW)
+│   ├── auth_utils.py               # Password hashing & JWT (NEW)
+│   ├── pricing_engine.py           # Dynamic pricing algorithm
+│   ├── flight_generator.py         # Auto-generate flights (NEW)
+│   ├── requirements.txt            # Python dependencies
+│   ├── .env                        # Environment variables
+│   └── auth_schema.sql             # User authentication schema (NEW)
 │
-├── schema.sql                  # Database schema
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx          # Navigation bar (Updated)
+│   │   │   ├── ProgressStepper.jsx # Progress indicator (NEW)
+│   │   │   ├── FlightSearch.jsx    # Search page (Enhanced)
+│   │   │   ├── BookingForm.jsx     # Booking flow
+│   │   │   ├── BookingConfirmation.jsx
+│   │   │   ├── Login.jsx           # Login page (NEW)
+│   │   │   ├── Signup.jsx          # Signup page (NEW)
+│   │   │   └── *.css               # Component styles
+│   │   ├── contexts/
+│   │   │   └── AuthContext.jsx     # Auth state management (NEW)
+│   │   ├── api.js                  # API configuration
+│   │   ├── App.js                  # Main app component
+│   │   └── index.js                # App entry point
+│   ├── package.json
+│   └── package-lock.json
+│
+├── schema.sql                      # Main database schema
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -95,16 +96,21 @@ flight-booking-simulator/
 
 ### **Prerequisites**
 - Python 3.8 or higher
+- Node.js 16+ and npm
 - MySQL 8.0 or higher
-- pip (Python package manager)
+- Git
 
-### **Step 1: Clone Repository**
+---
+
+### **Backend Setup**
+
+#### **Step 1: Clone Repository**
 ```bash
 git clone https://github.com/Alankrit-Srivas/flight-booking-simulator.git
 cd flight-booking-simulator
 ```
 
-### **Step 2: Create Virtual Environment**
+#### **Step 2: Create Virtual Environment**
 ```bash
 # Windows
 python -m venv venv
@@ -115,100 +121,284 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### **Step 3: Install Dependencies**
+#### **Step 3: Install Backend Dependencies**
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-### **Step 4: Setup Database**
+#### **Step 4: Setup Database**
 
-1. Create MySQL database:
+**Create Database:**
 ```sql
 CREATE DATABASE flight_booking_db;
 ```
 
-2. Import schema:
+**Run Main Schema:**
 ```bash
-# From project root
-mysql -u root -p flight_booking_db
+mysql -u root -p flight_booking_db < ../schema.sql
 ```
 
-Then in MySQL:
-```sql
-source schema.sql;
-EXIT;
+**Run Auth Schema:**
+```bash
+mysql -u root -p flight_booking_db < auth_schema.sql
 ```
 
-### **Step 5: Configure Environment**
+Or execute both SQL files in MySQL Workbench/phpMyAdmin.
+
+#### **Step 5: Configure Environment**
 
 Create `.env` file in `backend/` folder:
 ```env
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_NAME=flight_booking_db
 
+# API Configuration
 API_HOST=0.0.0.0
 API_PORT=8000
 API_DEBUG=True
 ```
 
-### **Step 6: Start Server**
+#### **Step 6: Start Backend Server**
 ```bash
-cd backend
 python main.py
 ```
 
-Server will start at: `http://localhost:8000`
+Backend will run at: `http://localhost:8000`
+
+API Documentation: `http://localhost:8000/api/docs`
+
+---
+
+### **Frontend Setup**
+
+#### **Step 1: Install Frontend Dependencies**
+```bash
+cd frontend
+npm install
+```
+
+#### **Step 2: Start Development Server**
+```bash
+npm start
+```
+
+Frontend will open at: `http://localhost:3000`
+
+---
+
+## 🎯 Features Documentation
+
+### **1️⃣ User Authentication**
+
+#### **Signup**
+- Navigate to `/signup`
+- Secure password hashing with bcrypt
+- JWT token generation
+- Auto-login after registration
+
+#### **Login**
+- Navigate to `/login`
+- JWT-based authentication
+- Session persistence with localStorage
+- Protected routes
+
+#### **User Session**
+- User info displayed in navbar
+- Token-based API authentication
+- Logout functionality
+
+**API Endpoints:**
+```
+POST /api/auth/signup    - Register new user
+POST /api/auth/login     - Login user
+GET  /api/auth/me        - Get current user
+POST /api/auth/logout    - Logout user
+```
+
+---
+
+### **2️⃣ Enhanced Flight Search**
+
+#### **Smart Autocomplete**
+- Type-ahead suggestions for airports
+- Search by city name or airport code
+- Displays full airport names
+- Instant filtering as you type
+
+#### **Trip Type Selection**
+- **One-way**: Single journey
+- **Round-trip**: Return journey (with return date)
+- Toggle between trip types
+
+#### **Airline Filter**
+- Dropdown with all available airlines
+- Filter flights by specific airline
+- "All Airlines" option
+
+#### **Quick Filters**
+- 💰 **Cheapest**: Sort by lowest price first
+- ⚡ **Fastest**: Sort by shortest duration
+- ✈️ **Non-stop First**: Prioritize direct flights
+- **All Flights**: Default view
+
+#### **Search Parameters**
+```
+- Origin (with autocomplete)
+- Destination (with autocomplete)
+- Departure Date
+- Return Date (for round-trip)
+- Airline Selection
+- Sort Options
+```
+
+---
+
+### **3️⃣ Dynamic Pricing Engine**
+
+**Price Calculation Factors:**
+
+| Factor | Weight | Impact |
+|--------|--------|--------|
+| **Seat Availability** | 40% | Fewer seats = Higher price |
+| **Time to Departure** | 35% | Closer date = Higher price |
+| **Demand Level** | 25% | High demand = Higher price |
+
+**Price Multiplier Range:** 0.8x - 3.0x of base price
+
+**Example Calculation:**
+```
+Flight: BLR → DEL
+Base Price: ₹4500
+Available Seats: 50/180 (72% occupied)
+Days to Departure: 5 days
+Demand: High
+
+Seat Factor: 1.9x (high occupancy)
+Time Factor: 1.5x (last minute)
+Demand Factor: 1.4x (high demand)
+
+Final Multiplier: (1.9×0.4) + (1.5×0.35) + (1.4×0.25) = 1.635
+Current Price: ₹4500 × 1.635 = ₹7,357
+```
+
+---
+
+### **4️⃣ Auto-Flight Generation**
+
+When searching for a future date without existing flights:
+- Automatically generates realistic flights
+- Multiple airlines and routes
+- Varied departure times (6 AM - 11 PM)
+- Random pricing and seat availability
+- Persistent after generation
+
+**Supported Routes:**
+- BLR ↔ DEL, BOM, MAA, HYD, CCU, GOI, COK
+- DEL ↔ BOM, MAA
+- BOM ↔ GOI
+- And more...
+
+---
+
+### **5️⃣ Booking System**
+
+#### **Multi-Step Flow**
+1. **Search** - Find flights
+2. **Choose Flight** - Select from results
+3. **Choose Fare** - Lowfare / Economy / Premium
+4. **Passenger Details** - Enter information
+5. **Extra Services** - Add-ons (Priority, Baggage)
+6. **Payment** - Simulated payment (95% success rate)
+
+#### **Fare Types**
+
+| Fare | Seat | Baggage | Flexibility | Price |
+|------|------|---------|-------------|-------|
+| **Lowfare** | Auto-allocated | 1 Cabin | Non-refundable | 80% of base |
+| **Economy** | Choice included | 1 Cabin + 1 Checked | Non-refundable | 100% (base) |
+| **Premium** | Choice included | 2 Cabin + 2 Checked | Date change OK | 150% of base |
+
+#### **Extra Services**
+- 🚶 Priority Boarding: $15
+- 🎒 Extra Large Baggage: $25
+- ✈️ No Added Services: $0
+
+---
+
+### **6️⃣ Concurrency Control**
+
+**Problem Solved:** Multiple users booking the same seat simultaneously
+
+**Solution:** Database row-level locking
+```sql
+SELECT * FROM flights WHERE id = ? FOR UPDATE
+```
+
+**Benefits:**
+- ✅ No double bookings
+- ✅ No overbooking
+- ✅ Thread-safe operations
+- ✅ ACID compliance
 
 ---
 
 ## 📖 API Documentation
 
-Once running, access:
+Once running, access interactive API docs:
 - **Swagger UI**: http://localhost:8000/api/docs
 - **ReDoc**: http://localhost:8000/api/redoc
-- **Health Check**: http://localhost:8000/
 
----
+### **Authentication Endpoints**
+```http
+POST /api/auth/signup
+Content-Type: application/json
 
-## 🎯 API Endpoints
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "first_name": "John",
+  "last_name": "Doe",
+  "phone": "9876543210"
+}
+```
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-### **Flights**
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/flights` | Get all flights (with filters) |
-| GET | `/api/flights/{id}` | Get specific flight details |
-| POST | `/api/flights` | Create new flight |
-| PUT | `/api/flights/{id}` | Update flight |
-| DELETE | `/api/flights/{id}` | Delete flight |
-
-**Example Search Request:**
-```bash
-GET /api/flights?origin=BLR&destination=DEL&sort_by=price&order=asc
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
 ```
 
----
+### **Flight Endpoints**
+```http
+GET /api/flights?origin=BLR&destination=DEL&departure_date=2025-12-25
 
-### **Bookings**
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/bookings` | Create new booking |
-| GET | `/api/bookings` | Get all bookings |
-| GET | `/api/bookings/{pnr}` | Get booking by PNR |
-| DELETE | `/api/bookings/{pnr}` | Cancel booking |
+Response:
+{
+  "success": true,
+  "count": 5,
+  "flights": [...]
+}
+```
 
-**Example Booking Request:**
-```json
+### **Booking Endpoints**
+```http
 POST /api/bookings
+Authorization: Bearer <token>
+
 {
   "flight_id": 11,
   "passenger": {
     "first_name": "John",
     "last_name": "Doe",
-    "email": "john.doe@example.com",
+    "email": "john@example.com",
     "phone": "9876543210",
     "age": 30,
     "gender": "male"
@@ -217,165 +407,196 @@ POST /api/bookings
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "booking": {
-    "pnr": "ABC123",
-    "flight_number": "AI201",
-    "passenger_name": "John Doe",
-    "seat_number": "1A",
-    "booking_price": 4500.00,
-    "status": "confirmed"
-  }
-}
-```
-
 ---
 
-## 💰 Dynamic Pricing Algorithm
+## 🗄️ Database Schema
 
-The pricing engine calculates flight prices based on:
-
-### **1. Seat Availability (40% weight)**
+### **Users Table** (NEW)
+```sql
+- id (PK)
+- email (UNIQUE)
+- password_hash
+- first_name
+- last_name
+- phone
+- created_at
+- last_login
+- is_active
 ```
-80-100% available → 0.8-1.0x
-40-80% available  → 1.0-1.5x
-10-40% available  → 1.5-2.5x
-0-10% available   → 2.5-3.0x
-```
-
-### **2. Time to Departure (35% weight)**
-```
-> 30 days  → 0.8x (early bird)
-15-30 days → 1.0x
-7-15 days  → 1.3x
-3-7 days   → 1.7x
-< 3 days   → 2.0-3.0x (last minute)
-```
-
-### **3. Demand Level (25% weight)**
-```
-Low       → 0.9x
-Medium    → 1.0x
-High      → 1.4x
-Very High → 2.0x
-```
-
-**Final Price** = Base Price × (Weighted Average Multiplier)
-
----
-
-## 🔒 Concurrency Control
-
-The booking system prevents race conditions using **MySQL row-level locking**:
-```python
-# Lock flight row during booking
-SELECT * FROM flights WHERE id = ? FOR UPDATE
-```
-
-This ensures:
-- ✅ No double bookings
-- ✅ No overbooking
-- ✅ Thread-safe operations
-- ✅ ACID compliance
-
----
-
-## 🧪 Testing
-
-### **Manual Testing via Swagger UI**
-1. Navigate to http://localhost:8000/api/docs
-2. Test each endpoint interactively
-3. View request/response schemas
-
-### **Sample Test Flow**
-1. Search flights: `GET /api/flights?origin=BLR&destination=DEL`
-2. Create booking: `POST /api/bookings` with passenger details
-3. Verify booking: `GET /api/bookings/{pnr}`
-4. Check updated flight: `GET /api/flights/{id}` (seats decreased, price increased)
-5. Cancel booking: `DELETE /api/bookings/{pnr}`
-
----
-
-## 📊 Database Schema
 
 ### **Flights Table**
 ```sql
-- flight_number, airline
+- id (PK)
+- flight_number
+- airline
 - origin, destination
 - departure_time, arrival_time
-- base_price, current_price (dynamic)
+- base_price, current_price
 - total_seats, available_seats
-- demand_level, status
+- demand_level (low/medium/high/very_high)
+- status
 ```
 
 ### **Bookings Table**
 ```sql
-- pnr (unique 6-char)
-- flight_id (foreign key)
+- id (PK)
+- pnr (UNIQUE 6-char code)
+- flight_id (FK)
 - passenger details
 - seat_number
-- booking_price (locked at booking)
-- status, payment_status
+- booking_price
+- status (confirmed/cancelled)
+- payment_status
+- transaction_id
 ```
 
 ---
 
-## 📈 Project Milestones
+## 🧪 Testing Guide
+
+### **Test Authentication**
+1. Navigate to `/signup`
+2. Create account with:
+   - Email: test@example.com
+   - Password: test123
+   - Fill all fields
+3. Should auto-login and show name in navbar
+4. Logout and login again
+
+### **Test Search Features**
+1. Go to Search page
+2. Type "ban" in Origin → See Bangalore suggestions
+3. Click suggestion → Auto-fills "BLR"
+4. Toggle One-way/Round-trip
+5. Select airline from dropdown
+6. Click "Cheapest" filter → Sorts by price
+7. Select any future date → Auto-generates flights
+
+### **Test Booking Flow**
+1. Search for flights (BLR → DEL, future date)
+2. Click "Select this flight"
+3. Choose fare type (Economy recommended)
+4. Fill passenger details
+5. Select extra services (or skip)
+6. Complete booking
+7. View confirmation with PNR
+8. Print ticket option
+
+---
+
+## 🎨 UI/UX Features
+
+### **Design System**
+- **Color Scheme**: Teal gradient (#4db8a8)
+- **Typography**: System fonts for performance
+- **Layout**: Card-based, modern design
+- **Responsive**: Mobile-friendly (breakpoints at 768px, 1024px)
+
+### **Animations**
+- Smooth hover effects
+- Card elevation on hover
+- Button press animations
+- Loading states with spinners
+
+### **Accessibility**
+- Semantic HTML
+- Keyboard navigation support
+- ARIA labels where needed
+- High contrast ratios
+
+---
+
+## 🚧 Future Enhancements
+
+### **Phase 1: Advanced Features** (Planned)
+- [ ] Background price updater service
+- [ ] Analytics dashboard (revenue, bookings, occupancy)
+- [ ] Email notifications (booking confirmations)
+- [ ] PDF receipt generation
+- [ ] Admin panel (manage flights)
+
+### **Phase 2: Enterprise Features**
+- [ ] Payment gateway integration (Razorpay/Stripe)
+- [ ] Multi-currency support
+- [ ] SMS alerts (Twilio)
+- [ ] Loyalty programs
+- [ ] Referral system
+
+### **Phase 3: Deployment**
+- [ ] Docker containerization
+- [ ] CI/CD pipeline (GitHub Actions)
+- [ ] Cloud deployment (AWS/Azure/GCP)
+- [ ] Redis caching
+- [ ] Load balancing
+
+---
+
+## 🐛 Troubleshooting
+
+### **CORS Error**
+```
+Access to XMLHttpRequest blocked by CORS policy
+```
+**Solution:** Ensure `main.py` has CORS middleware configured before routes:
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+### **Database Connection Error**
+```
+Error: Access denied for user 'root'@'localhost'
+```
+**Solution:** Check `.env` file has correct `DB_PASSWORD`
+
+### **Module Not Found**
+```
+ModuleNotFoundError: No module named 'passlib'
+```
+**Solution:**
+```bash
+pip install passlib bcrypt python-jose[cryptography]
+```
+
+### **Port Already in Use**
+```
+Address already in use: Port 8000/3000
+```
+**Solution:**
+```bash
+# Kill process using port
+# Windows
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+
+# Linux/Mac
+lsof -i :8000
+kill -9 <PID>
+```
+
+---
+
+## 📊 Project Milestones
 
 | Milestone | Status | Description |
 |-----------|--------|-------------|
 | **Milestone 1** | ✅ Complete | Core Flight Search & Data Management |
 | **Milestone 2** | ✅ Complete | Dynamic Pricing Engine |
 | **Milestone 3** | ✅ Complete | Booking Workflow & Transactions |
-| **Milestone 4** | 🔜 Working | Frontend UI Development |
-
----
-
-## 🚧 Future Enhancements
-
-- [ ] React/Vue.js frontend
-- [ ] Background price updater service
-- [ ] Email notifications
-- [ ] PDF receipt generation
-- [ ] Admin dashboard
-- [ ] User authentication (JWT)
-- [ ] Payment gateway integration
-- [ ] Flight status updates
-- [ ] Multi-currency support
-- [ ] Docker containerization
-- [ ] CI/CD pipeline
-- [ ] Cloud deployment
-
----
-
-## 🐛 Troubleshooting
-
-### **Database Connection Error**
-```
-Error: Access denied for user 'root'@'localhost'
-```
-**Solution:** Verify `.env` file has correct `DB_PASSWORD`
-
-### **Module Not Found**
-```
-ModuleNotFoundError: No module named 'fastapi'
-```
-**Solution:** Activate venv and run `pip install -r requirements.txt`
-
-### **Port Already in Use**
-```
-Address already in use: Port 8000
-```
-**Solution:** Change port in `.env` or kill existing process
+| **Auth System** | ✅ Complete | User Authentication (Bonus) |
+| **Enhanced Search** | ✅ Complete | Autocomplete & Filters (Bonus) |
+| **Milestone 4** | 🔜 Pending | Advanced Features & Analytics |
 
 ---
 
 ## 🤝 Contributing
 
-This is an educational project. Suggestions and improvements are welcome!
+This is an educational project. Suggestions welcome!
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/AmazingFeature`)
@@ -396,6 +617,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Alankrit Srivas**
 - GitHub: [@Alankrit-Srivas](https://github.com/Alankrit-Srivas)
 - Project: [Flight Booking Simulator](https://github.com/Alankrit-Srivas/flight-booking-simulator)
+- Internship: Infosys Springboard Program
 
 ---
 
@@ -403,7 +625,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Infosys Springboard** - Internship Training Program
 - FastAPI Community
+- React Community
 - MySQL Documentation
+- Stack Overflow Community
 
 ---
 
@@ -412,9 +636,53 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions or issues:
 - Open an issue on GitHub
 - Check existing issues for solutions
+- Review API documentation at `/api/docs`
+
+---
+
+## 🌟 Key Features Summary
+
+✅ **User Authentication** - Secure signup/login with JWT  
+✅ **Smart Search** - Autocomplete with airport suggestions  
+✅ **Dynamic Pricing** - Real-time price adjustments  
+✅ **Trip Types** - One-way and Round-trip support  
+✅ **Airline Filter** - Filter by specific airlines  
+✅ **Quick Filters** - Cheapest, Fastest, Non-stop  
+✅ **Auto-Generate** - Creates flights for any future date  
+✅ **Multi-Step Booking** - Professional booking flow  
+✅ **Fare Classes** - Lowfare, Economy, Premium options  
+✅ **Extra Services** - Priority boarding, baggage  
+✅ **Concurrency Safe** - No double bookings  
+✅ **PNR Generation** - Unique booking references  
+✅ **Modern UI** - Professional teal-themed design  
+✅ **Responsive** - Mobile-friendly interface  
 
 ---
 
 **Built with ❤️ as part of Infosys Internship Training**
 
-**Status:** Backend Complete ✅ | Frontend In Progress 🔜
+**Status:** Backend Complete (100%) | Frontend Complete (100%) | Production Ready ✅
+
+Last Updated: December 2024
+
+---
+
+## 📸 Screenshots
+
+### Homepage
+![Homepage](screenshots/homepage.png)
+
+### Flight Search
+![Search](screenshots/search.png)
+
+### Booking Flow
+![Booking](screenshots/booking.png)
+
+### Confirmation
+![Confirmation](screenshots/confirmation.png)
+
+*(Add screenshots to a `screenshots` folder in your repo)*
+
+---
+
+**⭐ Star this repo if you found it helpful!**

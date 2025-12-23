@@ -28,7 +28,7 @@ def get_db_connection():
             return connection
         else:
             raise Error("Failed to connect to database")
-    except Error as e:
+    except Error as e: #cathes only mysql error 
         print(f"Error connecting to MySQL database: {e}")
         raise
 

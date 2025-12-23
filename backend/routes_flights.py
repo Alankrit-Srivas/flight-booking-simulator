@@ -4,6 +4,8 @@ from datetime import date, datetime
 from database import get_db_connection
 from pydantic import BaseModel, Field
 import mysql.connector
+from flight_generator import FlightGenerator
+from datetime import datetime, date
 
 router = APIRouter(prefix="/flights", tags=["Flights"])
 
@@ -26,6 +28,63 @@ class FlightUpdate(BaseModel):
     base_price: Optional[float] = None
     available_seats: Optional[int] = None
 
+
+def check_and_generate_flights(cursor, conn, origin=None, destination=None, departure_date=None):
+    """Check if flights exist for date, if not generate them"""
+    
+    if not departure_date:
+        return  # Don't generate if no date specified
+    
+    # Check if flights already exist for this date
+    query = "SELECT COUNT(*) as count FROM flights WHERE DATE(departure_time) = %s"
+    params = [departure_date]
+    
+    if origin:
+        query += " AND UPPER(origin) = UPPER(%s)"
+        params.append(origin)
+    
+    if destination:
+        query += " AND UPPER(destination) = UPPER(%s)"
+        params.append(destination)
+    
+    cursor.execute(query, params)
+    result = cursor.fetchone()
+    
+    # If no flights exist, generate them
+    if result['count'] == 0:
+        generator = FlightGenerator()
+        new_flights = generator.generate_flights_for_date(
+            departure_date.strftime('%Y-%m-%d') if isinstance(departure_date, date) else departure_date,
+            origin=origin,
+            destination=destination
+        )
+        
+        # Insert generated flights
+        insert_query = """
+            INSERT INTO flights 
+            (flight_number, airline, origin, destination, departure_time, 
+             arrival_time, base_price, current_price, total_seats, available_seats, demand_level)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        
+        for flight in new_flights:
+            cursor.execute(insert_query, (
+                flight['flight_number'],
+                flight['airline'],
+                flight['origin'],
+                flight['destination'],
+                flight['departure_time'],
+                flight['arrival_time'],
+                flight['base_price'],
+                flight['current_price'],
+                flight['total_seats'],
+                flight['available_seats'],
+                flight['demand_level']
+            ))
+        
+        conn.commit()
+        print(f"✅ Generated {len(new_flights)} flights for {departure_date}")
+
 # GET all flights with filtering and sorting
 @router.get("/")
 def get_flights(
@@ -35,11 +94,16 @@ def get_flights(
     sort_by: Optional[str] = Query("price", pattern="^(price|duration|departure)$"),
     order: Optional[str] = Query("asc", pattern="^(asc|desc)$")
 ):
-    """Search flights with filters"""
+    """Search flights with filters and auto-generate if needed"""
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
+        # Auto-generate flights if searching for future date
+        if departure_date:
+            check_and_generate_flights(cursor, conn, origin, destination, departure_date)
+        
+        # Base query
         query = """
             SELECT 
                 id, flight_number, airline, origin, destination,
@@ -47,10 +111,11 @@ def get_flights(
                 total_seats, available_seats, created_at,
                 TIMESTAMPDIFF(MINUTE, departure_time, arrival_time) as duration_minutes
             FROM flights
-            WHERE 1=1
+            WHERE departure_time > NOW()
         """
         params = []
         
+        # Add filters
         if origin:
             query += " AND UPPER(origin) = UPPER(%s)"
             params.append(origin)
@@ -63,6 +128,7 @@ def get_flights(
             query += " AND DATE(departure_time) = %s"
             params.append(departure_date)
         
+        # Add sorting
         sort_column_map = {
             "price": "current_price",
             "duration": "duration_minutes",
