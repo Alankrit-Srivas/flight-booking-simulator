@@ -681,7 +681,6 @@ Last Updated: December 2024
 ### Confirmation
 ![Confirmation](screenshots/confirmation.png)
 
-*(Add screenshots to a `screenshots` folder in your repo)*
 
 ---
 
