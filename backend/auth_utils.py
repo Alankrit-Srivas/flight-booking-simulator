@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import secrets
 
 # Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"],deprecated="auto")
 
 # JWT Configuration
 SECRET_KEY = "your-secret-key-change-in-production"  # Change this!
@@ -18,13 +18,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 def hash_password(password: str) -> str:
     """Hash a password"""
-    # Truncate password to 72 bytes for bcrypt compatibility
-    if len(password.encode('utf-8')) > 72:
-        password = password[:72]
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against hash"""
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_access_token(data: dict, expires_delta: timedelta = None):

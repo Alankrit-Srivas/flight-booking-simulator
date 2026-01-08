@@ -14,6 +14,7 @@ from routes_auth import router as auth_router
 from pricing_engine import PricingEngine
 from database import get_db_connection
 import mysql.connector
+from routes_seats import router as seats_router
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -43,6 +44,7 @@ app.add_middleware(
 app.include_router(flights_router, prefix="/api")
 app.include_router(bookings_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(seats_router, prefix="/api", tags=["seats"])
 
 @app.get("/")
 async def root():

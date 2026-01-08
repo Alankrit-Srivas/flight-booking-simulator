@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { flightAPI, bookingAPI } from '../api';
 import Navbar from './Navbar';
 import ProgressStepper from './ProgressStepper';
+import SeatSelection from './SeatSelection';
 import './BookingForm.css';
 
 function BookingForm() {
@@ -14,6 +15,8 @@ function BookingForm() {
   const [error, setError] = useState(null);
   const [step, setStep] = useState(3); // Start at fare selection
   const [selectedFare, setSelectedFare] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [showSeatSelection, setShowSeatSelection] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
   
   const [passengerData, setPassengerData] = useState({
@@ -100,17 +103,17 @@ function BookingForm() {
   };
 
   const handleServiceToggle = (serviceId) => {
-    if (serviceId === 'none') {
-      setSelectedServices([]);
-      setStep(6);
-    } else {
-      setSelectedServices(prev => 
-        prev.includes(serviceId) 
-          ? prev.filter(id => id !== serviceId)
-          : [...prev, serviceId]
-      );
-    }
-  };
+  if (serviceId === 'none') {
+    setSelectedServices([]);
+    setShowSeatSelection(true);  // Changed from setStep(6)
+  } else {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  }
+};
 
   const handlePassengerChange = (e) => {
     setPassengerData({
@@ -324,12 +327,49 @@ function BookingForm() {
             {selectedServices.length > 0 && (
               <button 
                 className="btn btn-primary btn-large"
-                onClick={() => setStep(6)}
+                onClick={() => setShowSeatSelection(true)}
               >
                 Continue to Payment
               </button>
             )}
           </div>
+        )}
+
+        {selectedSeats.length > 0 && (
+        <div className="summary-section">
+          <h3>Selected Seats</h3>
+          {selectedSeats.map(seatId => {
+            const row = parseInt(seatId.match(/\d+/)[0]);
+            const seatCategories = {
+              extra_legroom: { price: 15.00, rows: [1, 2], label: 'Extra Legroom' },
+              front: { price: 13.01, rows: [3, 4, 5], label: 'Front' },
+              standard: { price: 7.00, rows: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15], label: 'Standard' },
+              on_sale: { price: 3.00, rows: [18, 20], label: 'On Sale' }
+            };
+            let seatType = 'Standard';
+            let seatPrice = 7.00;
+            for (let [key, value] of Object.entries(seatCategories)) {
+              if (value.rows.includes(row)) {
+                seatType = value.label;
+                seatPrice = value.price;
+              }
+            }
+            return <p key={seatId}>Seat {seatId} ({seatType}) - €{seatPrice.toFixed(2)}</p>;
+          })}
+        </div>
+      )}
+
+        {/* Seat Selection Modal */}
+        {showSeatSelection && (
+          <SeatSelection 
+            flightId={flightId}
+            onClose={() => setShowSeatSelection(false)}
+            onSeatsSelected={(seats) => {
+              setSelectedSeats(seats);
+              setShowSeatSelection(false);
+              setStep(6);
+            }}
+          />
         )}
 
         {/* Step 6: Payment Confirmation */}
@@ -368,10 +408,26 @@ function BookingForm() {
               <div className="summary-total">
                 <h3>Total Amount</h3>
                 <div className="total-price">
-                  ${(selectedFare?.price + selectedServices.reduce((sum, id) => {
-                    const service = extraServices.find(s => s.id === id);
-                    return sum + (service?.price || 0);
-                  }, 0)).toFixed(2)}
+                  ${(
+                    (selectedFare?.price || 0) + 
+                    selectedServices.reduce((sum, id) => {
+                      const service = extraServices.find(s => s.id === id);
+                      return sum + (service?.price || 0);
+                    }, 0) +
+                    selectedSeats.reduce((sum, seatId) => {
+                      const row = parseInt(seatId.match(/\d+/)[0]);
+                      const seatCategories = {
+                        extra_legroom: { price: 15.00, rows: [1, 2] },
+                        front: { price: 13.01, rows: [3, 4, 5] },
+                        standard: { price: 7.00, rows: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15] },
+                        on_sale: { price: 3.00, rows: [18, 20] }
+                      };
+                      for (let [key, value] of Object.entries(seatCategories)) {
+                        if (value.rows.includes(row)) return sum + value.price;
+                      }
+                      return sum + 7.00;
+                    }, 0)
+                  ).toFixed(2)}
                 </div>
               </div>
             </div>

@@ -5,6 +5,7 @@ import Signup from './components/Signup';
 import FlightSearch from './components/FlightSearch';
 import BookingForm from './components/BookingForm';
 import BookingConfirmation from './components/BookingConfirmation';
+import SeatSelection from "./components/SeatSelection";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/search" element={<FlightSearch />} />
         <Route path="/booking/:flightId" element={<BookingForm />} />
         <Route path="/confirmation/:pnr" element={<BookingConfirmation />} />
+        <Route path="/seatselection" element={<SeatSelection />} />
       </Routes>
     </Router>
   );

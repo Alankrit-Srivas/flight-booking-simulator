@@ -43,8 +43,8 @@ function FlightSearch() {
     { code: 'BLR', city: 'Bangalore', name: 'Kempegowda International' },
     { code: 'DEL', city: 'Delhi', name: 'Indira Gandhi International' },
     { code: 'BOM', city: 'Mumbai', name: 'Chhatrapati Shivaji Maharaj' },
-    { code: 'MAA', city: 'Chennai', name: 'Chennai International' },
-    { code: 'CCU', city: 'Kolkata', name: 'Netaji Subhas Chandra Bose' },
+    { code: 'CHE', city: 'Chennai', name: 'Chennai International' },
+    { code: 'KOL', city: 'Kolkata', name: 'Netaji Subhas Chandra Bose' },
     { code: 'HYD', city: 'Hyderabad', name: 'Rajiv Gandhi International' },
     { code: 'GOI', city: 'Goa', name: 'Goa International' },
     { code: 'COK', city: 'Kochi', name: 'Cochin International' }
