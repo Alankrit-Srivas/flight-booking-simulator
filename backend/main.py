@@ -1,6 +1,7 @@
 """
 Flight Booking Simulator - Main Application
 """
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,40 +47,49 @@ app.include_router(bookings_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(seats_router, prefix="/api", tags=["seats"])
 
+# @app.get("/")
+# async def root():
+#     """API Health check"""
+#     try:
+#         conn = get_db_connection()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT VERSION()")
+#         db_version = cursor.fetchone()[0]
+#         cursor.close()
+#         conn.close()
+        
+#         return {
+#             "status": "healthy",
+#             "message": "Flight Booking Simulator API is running",
+#             "version": "1.0.0",
+#             "database": "connected",
+#             "db_version": db_version,
+#             "timestamp": datetime.now().isoformat(),
+#             "endpoints": {
+#                 "flights": "/api/flights",
+#                 "bookings": "/api/bookings",
+#                 "documentation": "/api/docs"
+#             }
+#         }
+
+    # except mysql.connector.Error as err:
+    #     return JSONResponse(
+    #         status_code=500,
+    #         content={
+    #             "status": "unhealthy",
+    #             "message": "Database connection failed",
+    #             "error": str(err)
+    #         }
+    #     )
+    
 @app.get("/")
 async def root():
-    """API Health check"""
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT VERSION()")
-        db_version = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
-        
-        return {
-            "status": "healthy",
-            "message": "Flight Booking Simulator API is running",
-            "version": "1.0.0",
-            "database": "connected",
-            "db_version": db_version,
-            "timestamp": datetime.now().isoformat(),
-            "endpoints": {
-                "flights": "/api/flights",
-                "bookings": "/api/bookings",
-                "documentation": "/api/docs"
-            }
-        }
+    return {
+        "status": "running",
+        "message": "Flight Booking Simulator API is live"
+    }
+
     
-    except mysql.connector.Error as err:
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "unhealthy",
-                "message": "Database connection failed",
-                "error": str(err)
-            }
-        )
 
 @app.on_event("startup")
 async def startup_event():
@@ -91,11 +101,13 @@ async def startup_event():
     print("Health Check: http://localhost:8000/")
     print("="*50)
 
+# import os
+
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
         log_level="info"
     )

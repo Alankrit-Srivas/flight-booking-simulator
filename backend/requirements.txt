@@ -5,7 +5,7 @@ python-multipart==0.0.6
 
 
 # 
-fastapi-cors==0.0.6
+from fastapi.middleware.cors import CORSMiddleware
 
 # Database
 mysql-connector-python==8.2.0
