@@ -1,0 +1,23 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install -r backend/requirements.txt"
+
+[deploy]
+startCommand = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[nixpacks]
+providers = ["python"]
+```
+
+### Option 2: Add Python-specific Files
+
+Create a `Procfile` in your **root folder**:
+```
+web: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+AND create a `runtime.txt` in your **root folder**:
+```
+python-3.11
